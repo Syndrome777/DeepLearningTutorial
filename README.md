@@ -27,7 +27,6 @@ This is a `Chinese tutorial` which is translated from [DeepLearning 0.1 document
 * Miscellaneous
 
 
-\frac{d}{dx}\sin x=\cos x
 
 
 
