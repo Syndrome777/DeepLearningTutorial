@@ -58,10 +58,11 @@
 #####符号和缩略语表
 
 #####Python命名空间
-	import theano
-    import theano.tensor as T
-    import numpy
-
+```Python
+import theano
+import theano.tensor as T
+import numpy
+```
 
 ###深度学习的监督优化入门
 
