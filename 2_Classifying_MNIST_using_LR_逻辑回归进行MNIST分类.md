@@ -10,9 +10,9 @@
 逻辑回归模型是一个线性概率模型。它由一个权值矩阵W和偏置向量b参数化。分类通过将输入向量提交到一组超平面，每个超平面对应一个类。输入向量和超平面的距离是这个输入属于该类的一个概率量化。
 在给定模型下，输入x，输出为y的概率，可以用如下公式表示
 
-![probality](/images/2_the_model_1.png)
+<center>![probality](/images/2_the_model_1.png)</center>
 
-![y_prediction](/images/2_the_model_2.png)
+<center>![y_prediction](/images/2_the_model_2.png)</center>
 
 Theano代码如下。
 
@@ -58,7 +58,7 @@ Theano代码如下。
 ###定义一个损失函数
 学习优化模型参数需要最小化一个损失参数。在多分类的逻辑回归中，很显然是使用负对数似然函数作为损失函数。似然函数和损失函数定义如下：
 
-![loss_function](/images/2_defining_a_loss_function_1.png)
+<center>![loss_function](/images/2_defining_a_loss_function_1.png)</center>
 
 虽然整本书都致力于探讨最小化话题，但梯度下降是迄今为止最简单的最小化非线性函数的方法。在这个教程中，我们使用minibatch随机梯度下降算法。可以看[随机梯度下降](http://deeplearning.net/tutorial/gettingstarted.html#opt-sgd)来获得更多细节。
 下面的代码定义了一个对给定的minibatch的损失函数。
@@ -750,14 +750,15 @@ if __name__ == '__main__':
     sgd_optimization_mnist()
 ```
 这个输出将是如下的格式
-	...
-	epoch 72, minibatch 83/83, validation error 7.510417 %
-     epoch 72, minibatch 83/83, test error of best model 7.510417 %
-	epoch 73, minibatch 83/83, validation error 7.500000 %
-     epoch 73, minibatch 83/83, test error of best model 7.489583 %
-	Optimization complete with best validation score of 7.500000 %,with test performance 7.489583 %
-	The code run for 74 epochs, with 1.936983 epochs/sec
-
+```
+...
+epoch 72, minibatch 83/83, validation error 7.510417 %
+epoch 72, minibatch 83/83, test error of best model 7.510417 %
+epoch 73, minibatch 83/83, validation error 7.500000 %
+epoch 73, minibatch 83/83, test error of best model 7.489583 %
+Optimization complete with best validation score of 7.500000 %,with test performance 7.489583 %
+The code run for 74 epochs, with 1.936983 epochs/sec
+```
 在`Intel(R) Core(TM)2 Duo CPU E8400 @ 3.00 Ghz`上，这个代码的速度是1.936 epochs/sec然后跑75 epochs，得到测试错误率为7.489%。在GPU上为10.0 epochs/sec在这个实例中我们定义为batch的大小为600。
 
 	
