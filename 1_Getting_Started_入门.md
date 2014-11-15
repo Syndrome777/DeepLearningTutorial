@@ -69,6 +69,7 @@ def shared_dataset(data_xy):
 * L：标签的数目
 * NLL：负对数似然函数
 * theta：给定模型的参数集合
+
 ####Python命名空间
 ```Python
 import theano
@@ -96,9 +97,9 @@ zero_one_loss = T.sum(T.neq(T.argmax(p_y_given_x), y))
 #####负对数似然损失函数
  由于0-1损失函数不可微分，在大型模型中对它优化会造成巨大开销。因此我们通过最大化给定数据标签的似然函数来训练模型。
 
-![nll_1](/images/1_negative_log_likelihod_1)
+![nll_1](/images/1_negative_log_likelihod_1.png)
 
-![nll_2](/images/1_negative_log_likelihod_2)
+![nll_2](/images/1_negative_log_likelihod_2.png)
 
  由于我们通常说最小化损失函数，所以我们给对数似然函数添加负号，来使得我们可以求解最小化负对数似然损失函数。
 
