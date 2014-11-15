@@ -165,6 +165,9 @@ for (x_batch, y_batch) in train_batches:
 #####正则化
  正则化是为了防止在MSGD训练过程中出现过拟合。为了应对过拟合，我们提出了几个方法：L1/L2正则化和early-stopping。
 ######L1/L2正则化
+ L1/L2正则化就是在损失函数中添加额外的项，用以惩罚一定的参数结构。对于L2正则化，又被称为“权制递减（weight decay）”。
+ 原则上来说，增加一个正则项，可以平滑神经网络的网络映射（通过惩罚大的参数值，可以减少网络模型的非线性参数数）。因而最小化这个和，就可以寻找到与训练数据最贴合同时范化性更好的模型。更具奥卡姆剃刀原则，最好的模型总是最简单的。
+ 当然，事实上，简单模型并不一定意味着好的泛化。但从经验上看，这个正则化方案可以提高神经网络的泛化能力，尤其是对于小数据集而言。下面的代码我们分别给两个正则项一个对应的权重。
 
 ```Python
 # symbolic Theano variable that represents the L1 regularization term
@@ -178,7 +181,8 @@ loss = NLL + lambda_1 * L1 + lambda_2 * L2
 ```
 
 #######Early-stopping
-
+ Early-stopping通过监控模型在验证集上的表现来应对过拟合。验证集是一个我们从未在梯度下降中使用，也不在测试集的数据集合，它被认为是为了测试数据的一个表达。当在验证集上，模型的表现不再提高，或者表现更差，那么启发式算法应该放弃继续优化。
+ 在选择何时终止优化方面，主要基于主观判断和一些启发式的方法，但在这个教程里，我们使用一个几何级数增加的patience量的策略。
 
 ```Python
 # early-stopping parameters
@@ -234,7 +238,35 @@ while (epoch < n_epochs) and (not done_looping):
 # best_params refers to the best out-of-sample parameters observed during the optimization
 ```
 
+ 如果过训练数据的batch批次。
+	这个`validation_frequency`应该要比`patience`更小。这个代码应该至少检查了两次，在使用`patience`之前。这就是我们使用这个等式`validation_frequency = min( value, patience/2.`的原因。
+	这个算法可能会有更好的表现，当我们通过统计显著性的测试来代替简单的比较来决定是否增加patient。
 
+#####测试
+ 我们依据在验证集上表现最好的参数作为模型的参数，去在测试集上进行测试。
+
+#####总结
+ 这是对优化章节的总结。Early-stopping技术需要我们将数据分割为训练集、验证集、测试集。测试集使用minibatch的随机梯度下降来对目标函数进行逼近。同时引入L1/L2正则项来应对过拟合。
+
+###Theano/Python技巧
+#####载入和保存模型
+ 当你做实验的时候，用梯度下降算法可能要好几个小时去发现一个最优解。你可能在发现解的时候，想要保存这些权值。你也可能想要保存搜索进程中当前最优化的解。
+
+######使用Pickle在共享变量中储存numpy的ndarrays
+```Python
+>>> import cPickle
+>>> save_file = open('path', 'wb')  # this will overwrite current contents
+>>> cPickle.dump(w.get_value(borrow=True), save_file, -1)  # the -1 is for HIGHEST_PROTOCOL
+>>> cPickle.dump(v.get_value(borrow=True), save_file, -1)  # .. and it triggers much more efficient
+>>> cPickle.dump(u.get_value(borrow=True), save_file, -1)  # .. storage than numpy's default
+>>> save_file.close()
+```
+```Python
+>>> save_file = open('path')
+>>> w.set_value(cPickle.load(save_file), borrow=True)
+>>> v.set_value(cPickle.load(save_file), borrow=True)
+>>> u.set_value(cPickle.load(save_file), borrow=True)
+```
 
 
 
