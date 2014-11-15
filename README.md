@@ -14,7 +14,7 @@ This is a `Chinese tutorial` which is translated from [DeepLearning 0.1 document
 ##内容/Contents
 
 * `入门`（Getting Started）
-* `使用逻辑回归进行MNIST分类`Classifying MNIST digits using Logistic Regression
+* `使用逻辑回归进行MNIST分类`(Classifying MNIST digits using Logistic Regression)
 * Multilayer Perceptron
 * Convolutional Neural Networks(LeNet)
 * Denoising Autoencoders(dA)

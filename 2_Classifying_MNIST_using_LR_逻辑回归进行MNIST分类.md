@@ -1,7 +1,8 @@
-使用逻辑回归分类器进行MNIST分类（Classifying MNIST using Logistic Regressing）
+使用逻辑回归进行MNIST分类（Classifying MNIST using Logistic Regressing）
 =============================
-	本节假定读者属性了下面的Theano概念：[共享变量（shared variable）](http://deeplearning.net/software/theano/tutorial/examples.html#using-shared-variables), [基本数学算子（basic arithmetic ops）](http://deeplearning.net/software/theano/tutorial/adding.html#adding-two-scalars), [Theano的进阶（T.grad）](http://deeplearning.net/software/theano/tutorial/examples.html#computing-gradients), [floatX(默认为float64)](http://deeplearning.net/software/theano/library/config.html#config.floatX)。假如你想要在你的GPU上跑你的代码，你也需要看[GPU](http://deeplearning.net/software/theano/tutorial/using_gpu.html)。
-	本节的所有代码可以在[这里](http://deeplearning.net/tutorial/code/logistic_sgd.py)下载。
+本节假定读者属性了下面的Theano概念：[共享变量（shared variable）](http://deeplearning.net/software/theano/tutorial/examples.html#using-shared-variables), [基本数学算子（basic arithmetic ops）](http://deeplearning.net/software/theano/tutorial/adding.html#adding-two-scalars), [Theano的进阶（T.grad）](http://deeplearning.net/software/theano/tutorial/examples.html#computing-gradients), [floatX(默认为float64)](http://deeplearning.net/software/theano/library/config.html#config.floatX)。假如你想要在你的GPU上跑你的代码，你也需要看[GPU](http://deeplearning.net/software/theano/tutorial/using_gpu.html)。
+
+本节的所有代码可以在[这里](http://deeplearning.net/tutorial/code/logistic_sgd.py)下载。
 
 在这一节，我们将展示Theano如何实现最基本的分类器：逻辑回归分类器。我们以模型的快速入门开始，复习(refresher)和巩固(anchor)数学负号，也展示了数学表达式如何映射到Theano图中。
 
