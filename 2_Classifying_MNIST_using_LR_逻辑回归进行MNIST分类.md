@@ -9,8 +9,11 @@
 ###模型
 逻辑回归模型是一个线性概率模型。它由一个权值矩阵W和偏置向量b参数化。分类通过将输入向量提交到一组超平面，每个超平面对应一个类。输入向量和超平面的距离是这个输入属于该类的一个概率量化。
 在给定模型下，输入x，输出为y的概率，可以用如下公式表示
+
 ![probality](/images/2_the_model_1.png)
+
 ![y_prediction](/images/2_the_model_2.png)
+
 Theano代码如下。
 
 ```Python
@@ -54,6 +57,7 @@ Theano代码如下。
 
 ###定义一个损失函数
 学习优化模型参数需要最小化一个损失参数。在多分类的逻辑回归中，很显然是使用负对数似然函数作为损失函数。似然函数和损失函数定义如下：
+
 ![loss_function](/images/2_defining_a_loss_function_1.png)
 
 虽然整本书都致力于探讨最小化话题，但梯度下降是迄今为止最简单的最小化非线性函数的方法。在这个教程中，我们使用minibatch随机梯度下降算法。可以看[随机梯度下降](http://deeplearning.net/tutorial/gettingstarted.html#opt-sgd)来获得更多细节。
