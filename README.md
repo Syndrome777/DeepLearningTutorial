@@ -15,7 +15,7 @@ This is a `Chinese tutorial` which is translated from [DeepLearning 0.1 document
 
 * [入门（Getting Started）](https://github.com/Syndrome777/DeepLearningTutorial/blob/master/1_Getting_Started_入门.md)
 * [使用逻辑回归进行MNIST分类(Classifying MNIST digits using Logistic Regression)](https://github.com/Syndrome777/DeepLearningTutorial/blob/master/2_Classifying_MNIST_using_LR_逻辑回归进行MNIST分类.md)
-* Multilayer Perceptron
+* [多层感知机（Multilayer Perceptron）](https://github.com/Syndrome777/DeepLearningTutorial/blob/master/3_Multilayer_Perceptron_多层感知机.md)
 * Convolutional Neural Networks(LeNet)
 * Denoising Autoencoders(dA)
 * Stcaked Denoising Autoencoders(SdA)
