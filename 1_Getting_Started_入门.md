@@ -9,7 +9,7 @@
 	git clone git://github.com/lisa-lab/DeepLearningTutorials.git
 
 ###数据集
-#####MNIST数据集
+####MNIST数据集
 (mnist.pkl.gz)
 
  [MNIST](http://yann.lecun.com/exdb/mnist)是一个包含60000个训练样例和10000个测试样例的手写数字图像的数据集。在许多论文，包括本教程，都将60000个训练样例分为50000个样例的训练集和10000个样例的验证集（为了超参数，例如学习率、模型尺寸等等）。所有的数字图像都被归一化和中心化为28*28的像素，256位图的灰度图。
@@ -54,13 +54,13 @@ def shared_dataset(data_xy):
 
 
 ###标记
-#####数据集标记
+####数据集标记
 
-#####数学约定
+####数学约定
 
-#####符号和缩略语表
+####符号和缩略语表
 
-#####Python命名空间
+####Python命名空间
 ```Python
 import theano
 import theano.tensor as T
@@ -68,10 +68,10 @@ import numpy
 ```
 
 ###深度学习的监督优化入门
-#####学习一个分类器
-######0-1损失函数
-	f(x)=argmax(k) P(Y=k|x,theta)
-	L=sum(I(f(x)==y))
+####学习一个分类器
+#####0-1损失函数
+f(x)=argmax(k) P(Y=k|x,theta)
+L=sum(I(f(x)==y))
 
 ```Python
 # zero_one_loss is a Theano variable representing a symbolic
@@ -81,7 +81,7 @@ import numpy
 zero_one_loss = T.sum(T.neq(T.argmax(p_y_given_x), y))
 ```
 
-######负对数似然损失函数
+#####负对数似然损失函数
  由于0-1损失函数不可微分，在大型模型中对它优化会造成巨大开销。因此我们通过最大化给定数据标签的似然函数来训练模型。
  由于我们通常说最小化损失函数，所以我们给对数似然函数添加负号，来使得我们可以求解最小化负对数似然损失函数。
 
@@ -96,7 +96,7 @@ NLL = -T.sum(T.log(p_y_given_x)[T.arange(y.shape[0]), y])
 # syntax to retrieve the log-probability of the correct labels, y.
 ```
 
-#####随机梯度下降
+####随机梯度下降
  什么是普通的梯度下降？梯度下降是一个简单的算法，利用负梯度方向来决定每次迭代的新的搜索方向，使得每次迭代能使待优化的目标函数逐步减小。
 伪代码如下所示。
 
@@ -142,7 +142,7 @@ for (x_batch,y_batch) in train_batches:
  伪代码如下。
 
  ```Python
- # Minibatch Stochastic Gradient Descent
+# Minibatch Stochastic Gradient Descent
 
 # assume loss is a symbolic description of the loss function given
 # the symbolic variables params (shared variable), x_batch, y_batch;
@@ -162,7 +162,7 @@ for (x_batch, y_batch) in train_batches:
         return params
 ```
 
-#####正则化
+####正则化
  正则化是为了防止在MSGD训练过程中出现过拟合。为了应对过拟合，我们提出了几个方法：L1/L2正则化和early-stopping。
 ######L1/L2正则化
  L1/L2正则化就是在损失函数中添加额外的项，用以惩罚一定的参数结构。对于L2正则化，又被称为“权制递减（weight decay）”。
@@ -180,7 +180,7 @@ L2_sqr = T.sum(param ** 2)
 loss = NLL + lambda_1 * L1 + lambda_2 * L2
 ```
 
-#######Early-stopping
+#####Early-stopping
  Early-stopping通过监控模型在验证集上的表现来应对过拟合。验证集是一个我们从未在梯度下降中使用，也不在测试集的数据集合，它被认为是为了测试数据的一个表达。当在验证集上，模型的表现不再提高，或者表现更差，那么启发式算法应该放弃继续优化。
  在选择何时终止优化方面，主要基于主观判断和一些启发式的方法，但在这个教程里，我们使用一个几何级数增加的patience量的策略。
 
@@ -242,17 +242,17 @@ while (epoch < n_epochs) and (not done_looping):
 	这个`validation_frequency`应该要比`patience`更小。这个代码应该至少检查了两次，在使用`patience`之前。这就是我们使用这个等式`validation_frequency = min( value, patience/2.`的原因。
 	这个算法可能会有更好的表现，当我们通过统计显著性的测试来代替简单的比较来决定是否增加patient。
 
-#####测试
+####测试
  我们依据在验证集上表现最好的参数作为模型的参数，去在测试集上进行测试。
 
-#####总结
+####总结
  这是对优化章节的总结。Early-stopping技术需要我们将数据分割为训练集、验证集、测试集。测试集使用minibatch的随机梯度下降来对目标函数进行逼近。同时引入L1/L2正则项来应对过拟合。
 
 ###Theano/Python技巧
 #####载入和保存模型
  当你做实验的时候，用梯度下降算法可能要好几个小时去发现一个最优解。你可能在发现解的时候，想要保存这些权值。你也可能想要保存搜索进程中当前最优化的解。
 
-######使用Pickle在共享变量中储存numpy的ndarrays
+#####使用Pickle在共享变量中储存numpy的ndarrays
 ```Python
 >>> import cPickle
 >>> save_file = open('path', 'wb')  # this will overwrite current contents
