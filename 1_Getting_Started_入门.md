@@ -55,11 +55,20 @@ def shared_dataset(data_xy):
 
 ###标记
 ####数据集标记
-
+我们定义数据集为D,包括3个部分，D_train，D_valid，D_test三个集合。D内每个索引都是一个(x,y)对。
 ####数学约定
-
+* W：大写字母表示矩阵（除非特殊说明）
+* W(i,j)：矩阵内（i，j）点的数据
+* W(i.)：矩阵的一行
+* W(.j)：矩阵的一列
+* b：小些字母表示向量（除非特殊说明）
+* b(i)：向量内的（i）点的数据
 ####符号和缩略语表
-
+* D：输入维度的数目
+* D_h(i)：第i层个隐层的输入单元数目
+* L：标签的数目
+* NLL：负对数似然函数
+* theta：给定模型的参数集合
 ####Python命名空间
 ```Python
 import theano
@@ -70,7 +79,11 @@ import numpy
 ###深度学习的监督优化入门
 ####学习一个分类器
 #####0-1损失函数
-f(x)=argmax(k)   P(Y=k|x,theta)   L=sum(I(f(x)==y))
+![0-1_loss_1](/images/1_0-1_loss_1.png)
+
+![0-1_loss_2](/images/1_0-1_loss_2.png)
+
+![0-1_loss_3](/images/1_0-1_loss_3.png)
 
 ```Python
 # zero_one_loss is a Theano variable representing a symbolic
@@ -82,6 +95,11 @@ zero_one_loss = T.sum(T.neq(T.argmax(p_y_given_x), y))
 
 #####负对数似然损失函数
  由于0-1损失函数不可微分，在大型模型中对它优化会造成巨大开销。因此我们通过最大化给定数据标签的似然函数来训练模型。
+
+![nll_1](/images/1_negative_log_likelihod_1)
+
+![nll_2](/images/1_negative_log_likelihod_2)
+
  由于我们通常说最小化损失函数，所以我们给对数似然函数添加负号，来使得我们可以求解最小化负对数似然损失函数。
 
 ```Python
@@ -165,6 +183,12 @@ for (x_batch, y_batch) in train_batches:
  正则化是为了防止在MSGD训练过程中出现过拟合。为了应对过拟合，我们提出了几个方法：L1/L2正则化和early-stopping。
 #####L1/L2正则化
  L1/L2正则化就是在损失函数中添加额外的项，用以惩罚一定的参数结构。对于L2正则化，又被称为“权制递减（weight decay）”。
+
+![l1_l2_regularization_1](/images/1_l1_l2_regularization_1.png)
+
+![l1_l2_regularization_2](/images/1_l1_l2_regularization_2.png)
+
+
  原则上来说，增加一个正则项，可以平滑神经网络的网络映射（通过惩罚大的参数值，可以减少网络模型的非线性参数数）。因而最小化这个和，就可以寻找到与训练数据最贴合同时范化性更好的模型。更具奥卡姆剃刀原则，最好的模型总是最简单的。
  当然，事实上，简单模型并不一定意味着好的泛化。但从经验上看，这个正则化方案可以提高神经网络的泛化能力，尤其是对于小数据集而言。下面的代码我们分别给两个正则项一个对应的权重。
 
