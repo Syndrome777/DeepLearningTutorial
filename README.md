@@ -27,7 +27,11 @@ This is a `Chinese tutorial` which is translated from [DeepLearning 0.1 document
 * Miscellaneous
 
 
-
+##版权/Copyright
+####作者/Author
+[Theano Development Team](http://deeplearning.net/tutorial/LICENSE.html), LISA lab, University of Montreal
+####翻译者/Translator
+[Lifeng Hua](https://github.com/Syndrome777), Zhejiang University
 
 
 
