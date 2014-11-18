@@ -202,16 +202,247 @@ With ignore_border set to False:
 
 ![full_model](/images/4_full_model_1.png)
 
-###将它组合起来
+模型比较低的层是由卷积和最大池化层的交替来构建的，较高的层则是全连接的传统MLP（隐藏层＋逻辑回归）。第一个全连接层的输入是前一层(thr layer below)的特征映射的集合。
 
+从上图的实现来看，较低层的操作都是建立在4维张量上的。然后它需要被压缩为2维的特征映射，来适应之后的MLP实现。
+
+###将它组合起来
+现在我们已经知道了在Theano中实现LeNet的所有方法。那我们先实现一个`LeNetConvPoolLayer`类，它是{卷积＋最大池化}层。
+
+```Python
+class LeNetConvPoolLayer(object):
+    """Pool Layer of a convolutional network """
+
+    def __init__(self, rng, input, filter_shape, image_shape, poolsize=(2, 2)):
+        """
+        Allocate a LeNetConvPoolLayer with shared variable internal parameters.
+
+        :type rng: numpy.random.RandomState
+        :param rng: a random number generator used to initialize weights
+
+        :type input: theano.tensor.dtensor4
+        :param input: symbolic image tensor, of shape image_shape
+
+        :type filter_shape: tuple or list of length 4
+        :param filter_shape: (number of filters, num input feature maps,
+                              filter height, filter width)
+
+        :type image_shape: tuple or list of length 4
+        :param image_shape: (batch size, num input feature maps,
+                             image height, image width)
+
+        :type poolsize: tuple or list of length 2
+        :param poolsize: the downsampling (pooling) factor (#rows, #cols)
+        """
+
+        assert image_shape[1] == filter_shape[1]
+        self.input = input
+
+        # there are "num input feature maps * filter height * filter width"
+        # inputs to each hidden unit
+        fan_in = numpy.prod(filter_shape[1:])
+        # each unit in the lower layer receives a gradient from:
+        # "num output feature maps * filter height * filter width" /
+        #   pooling size
+        fan_out = (filter_shape[0] * numpy.prod(filter_shape[2:]) /
+                   numpy.prod(poolsize))
+        # initialize weights with random weights
+        W_bound = numpy.sqrt(6. / (fan_in + fan_out))
+        self.W = theano.shared(
+            numpy.asarray(
+                rng.uniform(low=-W_bound, high=W_bound, size=filter_shape),
+                dtype=theano.config.floatX
+            ),
+            borrow=True
+        )
+
+        # the bias is a 1D tensor -- one bias per output feature map
+        b_values = numpy.zeros((filter_shape[0],), dtype=theano.config.floatX)
+        self.b = theano.shared(value=b_values, borrow=True)
+
+        # convolve input feature maps with filters
+        conv_out = conv.conv2d(
+            input=input,
+            filters=self.W,
+            filter_shape=filter_shape,
+            image_shape=image_shape
+        )
+
+        # downsample each feature map individually, using maxpooling
+        pooled_out = downsample.max_pool_2d(
+            input=conv_out,
+            ds=poolsize,
+            ignore_border=True
+        )
+
+        # add the bias term. Since the bias is a vector (1D array), we first
+        # reshape it to a tensor of shape (1, n_filters, 1, 1). Each bias will
+        # thus be broadcasted across mini-batches and feature map
+        # width & height
+        self.output = T.tanh(pooled_out + self.b.dimshuffle('x', 0, 'x', 'x'))
+
+        # store parameters of this layer
+        self.params = [self.W, self.b]
+```
+注意，当初始化权重值的时候，fan-in是由感受野和输入特征映射数决定的。
+
+最后，我们通过使用在[使用逻辑回归进行MNIST分类](https://github.com/Syndrome777/DeepLearningTutorial/blob/master/2_Classifying_MNIST_using_LR_逻辑回归进行MNIST分类.md)中定义的`LogisticRegression`类，和[多层感知机](https://github.com/Syndrome777/DeepLearningTutorial/blob/master/3_Multilayer_Perceptron_多层感知机.md)中的`HiddenLayer`类来实例化我们的网络：
+
+```Python
+    x = T.matrix('x')   # the data is presented as rasterized images
+    y = T.ivector('y')  # the labels are presented as 1D vector of
+                        # [int] labels
+
+    ######################
+    # BUILD ACTUAL MODEL #
+    ######################
+    print '... building the model'
+
+    # Reshape matrix of rasterized images of shape (batch_size, 28 * 28)
+    # to a 4D tensor, compatible with our LeNetConvPoolLayer
+    # (28, 28) is the size of MNIST images.
+    layer0_input = x.reshape((batch_size, 1, 28, 28))
+
+    # Construct the first convolutional pooling layer:
+    # filtering reduces the image size to (28-5+1 , 28-5+1) = (24, 24)
+    # maxpooling reduces this further to (24/2, 24/2) = (12, 12)
+    # 4D output tensor is thus of shape (batch_size, nkerns[0], 12, 12)
+    layer0 = LeNetConvPoolLayer(
+        rng,
+        input=layer0_input,
+        image_shape=(batch_size, 1, 28, 28),
+        filter_shape=(nkerns[0], 1, 5, 5),
+        poolsize=(2, 2)
+    )
+
+    # Construct the second convolutional pooling layer
+    # filtering reduces the image size to (12-5+1, 12-5+1) = (8, 8)
+    # maxpooling reduces this further to (8/2, 8/2) = (4, 4)
+    # 4D output tensor is thus of shape (nkerns[0], nkerns[1], 4, 4)
+    layer1 = LeNetConvPoolLayer(
+        rng,
+        input=layer0.output,
+        image_shape=(batch_size, nkerns[0], 12, 12),
+        filter_shape=(nkerns[1], nkerns[0], 5, 5),
+        poolsize=(2, 2)
+    )
+
+    # the HiddenLayer being fully-connected, it operates on 2D matrices of
+    # shape (batch_size, num_pixels) (i.e matrix of rasterized images).
+    # This will generate a matrix of shape (batch_size, nkerns[1] * 4 * 4),
+    # or (500, 50 * 4 * 4) = (500, 800) with the default values.
+    layer2_input = layer1.output.flatten(2)
+
+    # construct a fully-connected sigmoidal layer
+    layer2 = HiddenLayer(
+        rng,
+        input=layer2_input,
+        n_in=nkerns[1] * 4 * 4,
+        n_out=500,
+        activation=T.tanh
+    )
+
+    # classify the values of the fully-connected sigmoidal layer
+    layer3 = LogisticRegression(input=layer2.output, n_in=500, n_out=10)
+
+    # the cost we minimize during training is the NLL of the model
+    cost = layer3.negative_log_likelihood(y)
+
+    # create a function to compute the mistakes that are made by the model
+    test_model = theano.function(
+        [index],
+        layer3.errors(y),
+        givens={
+            x: test_set_x[index * batch_size: (index + 1) * batch_size],
+            y: test_set_y[index * batch_size: (index + 1) * batch_size]
+        }
+    )
+
+    validate_model = theano.function(
+        [index],
+        layer3.errors(y),
+        givens={
+            x: valid_set_x[index * batch_size: (index + 1) * batch_size],
+            y: valid_set_y[index * batch_size: (index + 1) * batch_size]
+        }
+    )
+
+    # create a list of all model parameters to be fit by gradient descent
+    params = layer3.params + layer2.params + layer1.params + layer0.params
+
+    # create a list of gradients for all model parameters
+    grads = T.grad(cost, params)
+
+    # train_model is a function that updates the model parameters by
+    # SGD Since this model has many parameters, it would be tedious to
+    # manually create an update rule for each model parameter. We thus
+    # create the updates list by automatically looping over all
+    # (params[i], grads[i]) pairs.
+    updates = [
+        (param_i, param_i - learning_rate * grad_i)
+        for param_i, grad_i in zip(params, grads)
+    ]
+
+    train_model = theano.function(
+        [index],
+        cost,
+        updates=updates,
+        givens={
+            x: train_set_x[index * batch_size: (index + 1) * batch_size],
+            y: train_set_y[index * batch_size: (index + 1) * batch_size]
+        }
+    )
+```
+我们把进行实际训练和early-stopping代码取出了。因为它和MLP中是一样的。有兴趣的读者，可以阅读教程开头的源代码。
+
+###运行代码
+在一台Core i7-2600K CPU clocked at 3.40GHz上，我们使用floatX=float32，获得如下的输出：
+
+```
+Optimization complete.
+Best validation score of 0.910000 % obtained at iteration 17800,with test
+performance 0.920000 %
+The code for file convolutional_mlp.py ran for 380.28m
+```
+在GeForce GTX 285上，我们获得了如下：
+
+```
+Optimization complete.
+Best validation score of 0.910000 % obtained at iteration 15500,with test
+performance 0.930000 %
+The code for file convolutional_mlp.py ran for 46.76m
+```
+在GeForce GTX 480上，获得如下：
+
+```
+Optimization complete.
+Best validation score of 0.910000 % obtained at iteration 16400,with test
+performance 0.930000 %
+The code for file convolutional_mlp.py ran for 32.52m
+```
+可以观察到不同实验下验证误差和测试误差的不同，这是由不同硬件的取整结构不同造成的。可以忽略。
 
 ###技巧
 ####超参的选择
+卷积神经网络的训练相比与标准的MLP是相当困难的，因为它添加了更多的超参数。当我们在应用学习率和正则化的规则下，下面的方法也需要在优化CNNs被考虑：
 
 #####滤波器的数量
+当选择每层滤波器数量的时候，需要记住计算单卷积层的活性比传统的MLP会更加昂贵。
+
+假设第l-1层包含K_(l-1)个特征映射和M*N个像素点（例如，位置数乘以特征映射数），然后第l层有K_(l)个滤波器，尺寸为m*n。那么计算一个特征映射（在(M-m)*(N-n)个像素位置应用每个m*n大小的滤波器）将消耗(M-m)*(N-n)*m*n*K_(l-1)的计算量。然后总共要计算K_l次。如果不是所有的特征只与前一层的所有特征相连，那么事情就变得更加复杂啦。
+
+对标准MLP而言，第l层如果有K_l个神经元，那计算量只有K_(k-1)*K_l。因此，CNNs中滤波器的数量通常比MLPs中隐单元的数量小很多，通常是基于特征映射的尺寸（输入图像的尺寸和滤波器的形状）。
+
+因为特征映射的尺寸会随着深度的增加而减小，靠近输入层的层将趋向于有更少的滤波器，而更高的层有更多的滤波器。事实上，为了平衡每一层的计算量，特征数和图像位置数的乘积在层的传递过程中都是基本一致的。为了保护输入信息，我们需要保证总的激活数量（特征映射数*像素位置数）在层间传递的时候是至于减少（当然我们在做监督学习的时候当然是希望它减小的）。特征映射的数量直接控制整个容量，同时它依赖于可用样例的数目和任务的复杂度。
 
 
+#####滤波器的尺寸
+通常在每个文献中滤波器的尺寸都有很大的不同，它常常是基于数据库的。MNIST在第一层的最好结果是5*5层滤波器。当自然图像（每维有几百个像素）趋向于使用更大的滤波器，例如12*12，15*15。
 
+因此这个技巧事实上是去寻找正确等级的“粒度”，以便对给定的数据集去形成合适范围内的抽象。
+
+#####最大池化的尺寸
+经典的是2*2，或者没有最大池化。非常大的图可以在较低的层使用4*4的池化。但是需要记住的是，池化在通过16个因子减少信号维度的同时，也可能导致信号细节的大量丢失。
 
 
 
