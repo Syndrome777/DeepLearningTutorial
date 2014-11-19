@@ -5,7 +5,7 @@
 
 本节所有的代码都可用在[这里](http://deeplearning.net/tutorial/code/dA.py)下载。
 
-降噪自动编码机(denoising Autoencoders)是经典自动编码机的扩展。它在[Vincent08](http://deeplearning.net/tutorial/references.html#vincent08)中作为深度网络的一个构建块被介绍。我们在通过开始简短的[自动编码机](http://deeplearning.net/tutorial/dA.html#autoencoders)来开始本教程。
+降噪自动编码机(denoising Autoencoders)是经典自动编码机的扩展。它在[Vincent08](http://deeplearning.net/tutorial/references.html#vincent08)中作为深度网络的一个构建块被介绍。我们通过简短的[自动编码机](http://deeplearning.net/tutorial/dA.html#autoencoders)来开始本教程。
 
 ###自动编码机
 在[Bengio09](http://deeplearning.net/tutorial/references.html#bengio09)的第4.6节中，有自动编码机的简介。一个自动编码机，由d维的[0,1]之间的输入向量x，通过第一层映射（使用一个编码器）来获得隐藏的d‘维度的[0,1]的输出表达y。通过如下的决定性映射：
@@ -14,7 +14,7 @@
 
 这里s是一个非线性的函数，例如sigmoid。这个潜在的表达y，或者码，被映射回一个重构机z，来重构x。这个映射通过下面的简单转换来实现：
 
-![z_mapping](5_autoencoders_2.png)
+![z_mapping](/images/5_autoencoders_2.png)
 
 （这里撇号不代表矩阵转置）当y被给定时，z被看着是对x的预测。可选的，这个权重矩阵W‘的逆映射可用被约束为正向映射的转置：![tanspose](/images/5_autoencoders_3.png)，这被称为捆绑权重。这个模型的所有参数（W，b，b‘，或者不使用捆绑权重W’）通过优化最小平均重构误差来实现训练。
 

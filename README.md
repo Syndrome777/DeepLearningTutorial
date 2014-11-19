@@ -18,7 +18,7 @@ This is a `Chinese tutorial` which is translated from [DeepLearning 0.1 document
 * [多层感知机（Multilayer Perceptron）](https://github.com/Syndrome777/DeepLearningTutorial/blob/master/3_Multilayer_Perceptron_多层感知机.md)
 * [卷积神经网络（Convolutional Neural Networks(LeNet)）](https://github.com/Syndrome777/DeepLearningTutorial/blob/master/4_Convoltional_Neural_Networks_LeNet_卷积神经网络.md)
 * [降噪自动编码机器（Denoising Autoencoders(dA)）](https://github.com/Syndrome777/DeepLearningTutorial/blob/master/5_Denoising_Autoencoders_降噪自动编码.md)
-* Stcaked Denoising Autoencoders(SdA)
+* [层叠自动编码机(Stcaked Denoising Autoencoders(SdA))](https://github.com/Syndrome777/DeepLearningTutorial/blob/master/6_Stacked_Denoising_Autoencoders_层叠降噪自动编码机.md)
 * Restricted Boltzmann Machines(RBM)
 * Deep Belif Networks
 * Hybrid Monte-Carlo Sampling
