@@ -68,6 +68,56 @@ RBM的能量函数可以被定义如下：
 ![prob_rbm](/images/7_rbm_4.png)
 
 
+####二进制单元的RBMs
+在使用二进制单元（v和h都属于{0,1}）的普通研究情况时，概率版的普通神经激活函数表示如下：
+
+![activation_fun](/images/7_rbm_binary_units_1.png)
+
+![activation_fun2](/images/7_rbm_binary_units_2.png)
+
+二进制单元RBMs的自由能力为：
+
+![free_energy_binary](images/7_rbm_binary_units_1.png)
+
+
+####二进制单元的更新公式
+
+我们可以获得如下的一个二进制单元RBM的对数似然梯度：
+
+![equations](/images/7_update_e_b_u_1.png)
+
+这个公式的更多细节推倒，读者可以阅读[这一页](http://www.iro.umontreal.ca/~lisa/twiki/bin/view.cgi/Public/DBNEquations)，或者[Learning Deep Architectures for AI](http://www.iro.umontreal.ca/%7Elisa/publications2/index.php/publications/show/239)的第五节。在这里，我们将不使用这些等式，而是通过Theano的`T.grad`来获取梯度。
+
+###在RBM中进行采样
+
+p(x)的样本可以通过运行马尔可夫链的汇聚、Gibbs采样的过渡来得到。
+
+由N个随机变量（S=(S1,S2,...Sn)）的联合分布的Gibbs采样，可以通过N个采样子步骤来实现,形式如Si～p(Si|S-i)，其中S-i表示集合S中除Si的N-1个随机变量。
+
+我们可以从X的一个任意状态(比如[x1(0),x2(0),…,xK(0)])开始，利用上述条件 分布，迭代的对其分量依次采样，随着采样次数的增加，随机变量[x1(n),x2(n),…,xK(n)]的概率分布将以n的几何级数的速度收敛于X的联合 概率分布P(X)。也就是说，我们可以在未知联合概率分布的条件下对其进行采样。
+
+对于RBMs来说，S包含了可视和隐藏单元的集合。然而，由于它们的条件独立性，可以执行块Gibbs抽样。在这个设定中，可视单元被采样，同时给出隐藏单元的固定值，同样的，隐藏单元也是如此：
+
+![h_v](/images/7_sampling_1.png)
+
+这里，h(n)表示马尔可夫链中第n布的隐藏单元的集合。这意味着，h(n+1)根据概率`simg(W‘v(n)+ci)`来随机地被选为0/1。类似地v(n+1)也是如此。这个过程可以通过下面地图来展现：
+
+![gibbs_sampling](/images/7_sampling_2.png)
+
+当t趋向于无穷时，(v(t),h(t))将越加逼近正确样本的概率分布p(v,h)。
+
+在这个理论里面，每个参数在学习进程中的更新都需要运行这样几个链来趋近。毫无疑问这将耗费很大的计算量。一些新的算法已经被提出来，以有效的学习p(v,h)中的样本情况。
+
+
+###对比散度算法（CD-k）
+
+对比散度算法，是一种成功的用于求解对数似然函数关于未知参数梯度的近似的方法。它使用两个技巧来技术采样过程：
+* 因为我们希望p(v)=p_train(v)（数据的真实、底层分布），所以我们使用一个训练样本来初始化马尔可夫链（例如，从一个被预计接近于p的分布，所以这个链已经开始去收敛这个最终的分布p）。
+* 对比梯度不需要等待链的收敛。样本在k步Gibbs采样后就可以获得。在实际中，k=1时就可以获得惊人的好的效果。
+
+
+####反复的对比散度
+
 
 
 
