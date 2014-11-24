@@ -292,12 +292,168 @@ class RBM(object):
                                              dtype=theano.config.floatX)
         return [pre_sigmoid_v1, v1_mean, v1_sample]
 ```
+现在，我们可以使用这些函数来定义一个Gibbs采样步骤的符号图。我们定义如下两个函数：
+* `gibbs_vhv`表示从可视单元中开始的Gibbs采样的步骤。我们将可以看到这对于从RBM中采样是非常有用的。
+* `gibbs_hvh`表示从隐藏单元中开始Gibbs采样的步骤。这个函数再实现CD和PCD更新中是非常有用的。
+代码如下：
+
+```Python
+    def gibbs_hvh(self, h0_sample):
+        ''' This function implements one step of Gibbs sampling,
+            starting from the hidden state'''
+        pre_sigmoid_v1, v1_mean, v1_sample = self.sample_v_given_h(h0_sample)
+        pre_sigmoid_h1, h1_mean, h1_sample = self.sample_h_given_v(v1_sample)
+        return [pre_sigmoid_v1, v1_mean, v1_sample,
+                pre_sigmoid_h1, h1_mean, h1_sample]
+```
+
+```Python
+    def gibbs_vhv(self, v0_sample):
+        ''' This function implements one step of Gibbs sampling,
+            starting from the visible state'''
+        pre_sigmoid_h1, h1_mean, h1_sample = self.sample_h_given_v(v0_sample)
+        pre_sigmoid_v1, v1_mean, v1_sample = self.sample_v_given_h(h1_sample)
+        return [pre_sigmoid_h1, h1_mean, h1_sample,
+                pre_sigmoid_v1, v1_mean, v1_sample]
+
+    # start-snippet-2
+```
+
+这个类还有一个函数去计算模型的自由能量，以便去计算参数的梯度。注意我们也会返回pre-sigmoid。
+
+```Python
+    def free_energy(self, v_sample):
+        ''' Function to compute the free energy '''
+        wx_b = T.dot(v_sample, self.W) + self.hbias
+        vbias_term = T.dot(v_sample, self.vbias)
+        hidden_term = T.sum(T.log(1 + T.exp(wx_b)), axis=1)
+        return -hidden_term - vbias_term
+```
+我们随后添加一个`get_cost_update`方法，目的是产生CD-k和PCD-k的更新的象征性梯度。
+
+```Python
+    def get_cost_updates(self, lr=0.1, persistent=None, k=1):
+        """This functions implements one step of CD-k or PCD-k
+
+        :param lr: learning rate used to train the RBM
+
+        :param persistent: None for CD. For PCD, shared variable
+            containing old state of Gibbs chain. This must be a shared
+            variable of size (batch size, number of hidden units).
+
+        :param k: number of Gibbs steps to do in CD-k/PCD-k
+
+        Returns a proxy for the cost and the updates dictionary. The
+        dictionary contains the update rules for weights and biases but
+        also an update of the shared variable used to store the persistent
+        chain, if one is used.
+
+        """
+
+        # compute positive phase
+        pre_sigmoid_ph, ph_mean, ph_sample = self.sample_h_given_v(self.input)
+
+        # decide how to initialize persistent chain:
+        # for CD, we use the newly generate hidden sample
+        # for PCD, we initialize from the old state of the chain
+        if persistent is None:
+            chain_start = ph_sample
+        else:
+            chain_start = persistent
+```
+注意`get_cost_update`作为参数被变量化为`persistent`。这允许我们去使用相同的代码来实现CD和PCD。为了使用PCD，`persistent`需要被关联到一个共享变量，它包含前一次迭代的Gibbs链的状态。
+
+假如`persistent`为`None`，则我们使用正相位时产生的隐藏样本来初始化Gibbs链，以此实现CD。当我们已经建立了这个链的开始点的时候，我们就可以计算这个Gibbs链的终点的样本，以及我们需要的去获得梯度的样本。为了获得这些，我们使用Theano提供的`sacn`操作，我们建议读者去阅读这个[链接](http://deeplearning.net/software/theano/library/scan.html)。
+
+```Python
+        # perform actual negative phase
+        # in order to implement CD-k/PCD-k we need to scan over the
+        # function that implements one gibbs step k times.
+        # Read Theano tutorial on scan for more information :
+        # http://deeplearning.net/software/theano/library/scan.html
+        # the scan will return the entire Gibbs chain
+        (
+            [
+                pre_sigmoid_nvs,
+                nv_means,
+                nv_samples,
+                pre_sigmoid_nhs,
+                nh_means,
+                nh_samples
+            ],
+            updates
+        ) = theano.scan(
+            self.gibbs_hvh,
+            # the None are place holders, saying that
+            # chain_start is the initial state corresponding to the
+            # 6th output
+            outputs_info=[None, None, None, None, None, chain_start],
+            n_steps=k
+        )
+```
+当你已经产生了这个链，我们在链的末尾的样例获得负相位的自由能量。注意，这个`chain_end`是模型参数项中的一个的象征性的Theano变量，当我们简单的求解`T.grad`的时候，这个函数将通过Gibbs链来得到这个梯度。这不是我们想要的（它会搞乱我们的梯度），因此我们需要指示`T.grad`，`chain_end`是一个常量。我们通过`T.grad`的`consider_constant`来做这个事情。
+
+```Python
+        # determine gradients on RBM parameters
+        # note that we only need the sample at the end of the chain
+        chain_end = nv_samples[-1]
+
+        cost = T.mean(self.free_energy(self.input)) - T.mean(
+            self.free_energy(chain_end))
+        # We must not compute the gradient through the gibbs sampling
+        gparams = T.grad(cost, self.params, consider_constant=[chain_end])
+```
+最后，我们增加由`scan`返回的更新字典（包含了随机状态的`theano_rng`更新规则）来获取参数更新。在PCD例子中，也需要更新包含Gibbs链状态的共享变量。
+
+```Python
+        # constructs the update dictionary
+        for gparam, param in zip(gparams, self.params):
+            # make sure that the learning rate is of the right dtype
+            updates[param] = param - gparam * T.cast(
+                lr,
+                dtype=theano.config.floatX
+            )
+        if persistent:
+            # Note that this works only if persistent is a shared variable
+            updates[persistent] = nh_samples[-1]
+            # pseudo-likelihood is a better proxy for PCD
+            monitoring_cost = self.get_pseudo_likelihood_cost(updates)
+        else:
+            # reconstruction cross-entropy is a better proxy for CD
+            monitoring_cost = self.get_reconstruction_cost(updates,
+                                                           pre_sigmoid_nvs[-1])
+
+        return monitoring_cost, updates
+```
+
+###进展跟踪
+
+RBMs的训练是特别困难的。由于归一化函数Z，我们无法在训练的时候估计对数似然函数log(P(x))。因而我们没有直接可以度量超参数优化与否的方法。
+
+而下面的几个选项对用户是有用的。
+
+####负样本的检查
+
+在训练中获得的负样本是可以可视化的。在训练进程中，我们知道由RBM定义的模型不断逼近真实分布，p_train(x)。负样例就可以视为训练集中的样本。显而易见的，坏的超参数将在这种方式下被丢弃。
+
+####滤波器的可视化跟踪
+
+由模型训练的滤波器是可以可视化的。我们可以将每个单元的权值以灰度图的方式展示。滤波器应该选出数据中强的特征。对于任意的数据集，这个滤波器都是不确定的。例如，训练MNIST，滤波器就表现的像“stroke”检测器，而训练自然图像的稀疏编码的时候，则像Gabor滤波器。
+
+####似然估计的替代
+
+此外，更加容易处理的函数可以被用于做似然估计的替代。当我们使用PCD来训练RBM的时候，可以使用伪似然估计来替代。伪似然估计（Pseudo-likeihood,PL）更加简于计算，因为它假设所有的比特都是相互独立的，因此有：
+
+![PL](/images/7_proxies_likelihood_1.png)
 
 
 
 
+###主循环
 
 
+
+###结果
 
 
 
