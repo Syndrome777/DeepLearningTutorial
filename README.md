@@ -10,8 +10,7 @@ This is a `Chinese tutorial` which is translated from [DeepLearning 0.1 document
 这是一个翻译自[深度学习0.1文档](http://deeplearning.net/tutorial/contents.html)的`中文教程`。在这个教程里面所有的算法和模型都是通过Pyhton和[Theano](http://deeplearning.net/software/theano/index.html)实现的。Theano是一个著名的第三方库，允许程序员使用GPU或者CPU去运行他的Python代码。
 
 
-
-##内容/Contents
+## 内容/Contents
 
 * [入门（Getting Started）](https://github.com/Syndrome777/DeepLearningTutorial/blob/master/1_Getting_Started_入门.md)
 * [使用逻辑回归进行MNIST分类(Classifying MNIST digits using Logistic Regression)](https://github.com/Syndrome777/DeepLearningTutorial/blob/master/2_Classifying_MNIST_using_LR_逻辑回归进行MNIST分类.md)
@@ -27,10 +26,10 @@ This is a `Chinese tutorial` which is translated from [DeepLearning 0.1 document
 * Miscellaneous
 
 
-##版权/Copyright
-####作者/Author
+## 版权/Copyright
+#### 作者/Author
 [Theano Development Team](http://deeplearning.net/tutorial/LICENSE.html), LISA lab, University of Montreal
-####翻译者/Translator
+#### 翻译者/Translator
 [Lifeng Hua](https://github.com/Syndrome777), Zhejiang University
 
 
