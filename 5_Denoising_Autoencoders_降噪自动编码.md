@@ -7,7 +7,7 @@
 
 降噪自动编码机(denoising Autoencoders)是经典自动编码机的扩展。它在[Vincent08](http://deeplearning.net/tutorial/references.html#vincent08)中作为深度网络的一个构建块被介绍。我们通过简短的[自动编码机](http://deeplearning.net/tutorial/dA.html#autoencoders)来开始本教程。
 
-###自动编码机
+## 自动编码机
 在[Bengio09](http://deeplearning.net/tutorial/references.html#bengio09)的第4.6节中，有自动编码机的简介。一个自动编码机，由d维的[0,1]之间的输入向量x，通过第一层映射（使用一个编码器）来获得隐藏的d‘维度的[0,1]的输出表达y。通过如下的决定性映射：
 
 ![y_mapping](/images/5_autoencoders_1.png)
@@ -252,7 +252,7 @@ class dA(object):
 
 这里有其他方法，使得一个有比输入有更多隐藏单元的自动编码机，去避免只学习它本身，而是在输入的隐藏表达中捕捉到有用的东西。一个是添加稀疏性（迫使许多隐单元是0或者接近0）。稀疏性已经被很成功的发挥了[Ranzato07](http://deeplearning.net/tutorial/references.html#ranzato07)[Lee08](http://deeplearning.net/tutorial/references.html#lee08)。另一个是，在输入到重建过程中，增加从输入到重建的转换中的随机性。这个技术在受限玻尔兹曼机中被使用（Restricted Boltzmann Machines，在后面的章节中讨论），还有降噪自动编码机，在后面讨论。
 
-###降噪自动编码机
+## 降噪自动编码机
 
 降噪自动编码机的思想是很简单饿。为了迫使隐藏层去发现更加鲁棒性的特征，避免它只是去简单的学习定义，我们训练自动编码机去重建被破坏的输入版本的数据。
 
@@ -450,7 +450,7 @@ class dA(object):
 ```
 
 
-###将它组合起来
+## 将它组合起来
 
 现在去构建一个`dA`类和训练它变得很简单了。
 
@@ -509,7 +509,7 @@ image = Image.fromarray(tile_raster_images(X=da.W.get_value(borrow=True).T,
 image.save('filters_corruption_30.png')
 ```
 
-###运行这个代码
+## 运行这个代码
 
 当我们不使用任何噪声的时候，获得的滤波器如下：
 
