@@ -6,7 +6,7 @@
 
 在这一节，我们将展示Theano如何实现最基本的分类器：逻辑回归分类器。我们以模型的快速入门开始，复习(refresher)和巩固(anchor)数学负号，也展示了数学表达式如何映射到Theano图中。
 
-###模型
+## 模型
 逻辑回归模型是一个线性概率模型。它由一个权值矩阵W和偏置向量b参数化。分类通过将输入向量提交到一组超平面，每个超平面对应一个类。输入向量和超平面的距离是这个输入属于该类的一个概率量化。
 在给定模型下，输入x，输出为y的概率，可以用如下公式表示
 
@@ -55,7 +55,7 @@ Theano代码如下。
 为了获得实际的模型预测，我们使用`T_argmax`操作，来返回`p_y_given_x`的最大值对应的y。
 	如果想要获得完整的Theano算子，看[算子列表](http://deeplearning.net/software/theano/library/tensor/basic.html#basic-tensor-functionality)
 
-###定义一个损失函数
+## 定义一个损失函数
 学习优化模型参数需要最小化一个损失参数。在多分类的逻辑回归中，很显然是使用负对数似然函数作为损失函数。似然函数和损失函数定义如下：
 
 <center>![loss_function](/images/2_defining_a_loss_function_1.png)</center>
@@ -78,7 +78,7 @@ Theano代码如下。
 ```
 	在这里我们使用错误的平均来表示损失函数，以减少minibatch尺寸对我们的影响。
 
-###创建一个逻辑回归类
+## 创建一个逻辑回归类
 现在，我们要定义一个`逻辑回归`的类，来概括逻辑回归的基本行为。代码已经是我们之前涵盖的了，不再进行过多解释。
 
 ```Python
@@ -223,7 +223,7 @@ class LogisticRegression(object):
     cost = classifier.negative_log_likelihood(y)
 ```
 
-###学习模型
+## 学习模型
 在实现MSGD的许多语言中，需要通过手动求解损失函数对每个参数的梯度（微分）来实现。
 在Theano中呢，这是非常简单的。它自动微分，并且使用了一定的数学转换来提高数学稳定性。
 
@@ -257,7 +257,7 @@ class LogisticRegression(object):
 * 每一次函数调用，它都先用index对应的训练集的切片来更新x，y。然后计算该minibatch下的cost，以及申请`update`操作。
 每次`train_model(inedx)`被调用，它都计算并返回该minibatch的cost，当然这也是MSGD的一步。整个学习算法因循环了数据集所有样例。
 
-###训练模型
+## 训练模型
 在之前论述中所说，我们对分类错误的样本感兴趣（不仅仅是可能性）。因此模型中增加了一个额外的实例方法，来纪录每个minibatch中的错误分类样例数。
 
 ```Python
@@ -308,7 +308,7 @@ class LogisticRegression(object):
         }
     )
 ```
-###把它们组合起来
+## 把它们组合起来
 最后的代码如下。
 ```Python
 """
